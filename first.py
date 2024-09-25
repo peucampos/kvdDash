@@ -2,70 +2,13 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-from geopy.geocoders import Nominatim
-import folium
-from folium.plugins import MarkerCluster
-import time
 
 # Conectando ao banco de dados
 conn = st.connection("my_database")
-
-# ---- Caching the user addresses query ----
-@st.cache_data
-def get_user_addresses():
-    query = """
-    SELECT DISTINCT ua.estado, ua.cidade, ua.bairro, COUNT(1) AS total
-    FROM user_addresses ua 
-    GROUP BY ua.estado, ua.cidade, ua.bairro
-    HAVING total > 50
-    """
-    return conn.query(query)
-
-# Carregar dados de endereços de usuários
-user_addresses_df = get_user_addresses()
-
-# Função para geocodificar cidades
-@st.cache_data
-def geocode_addresses(addresses):
-    geolocator = Nominatim(user_agent="myGeocoder")
-    locations = []
-    
-    for address in addresses:
-        try:
-            location = geolocator.geocode(address, timeout=10)
-            if location:
-                locations.append((location.latitude, location.longitude))
-            else:
-                locations.append((None, None))  # Adicionar None se não encontrar
-        except Exception as e:
-            st.error(f"Erro ao geocodificar {address}: {e}")
-            locations.append((None, None))  # Adicionar None em caso de erro
-
-        time.sleep(1)  # Pausa para evitar limites de taxa da API
-
-    return locations
-
-# Gerar endereços para geocodificação
-addresses = user_addresses_df.apply(lambda row: f"{row['bairro']}, {row['cidade']}, {row['estado']}, Brazil", axis=1)
-
-# Geocodificar endereços e adicionar coordenadas ao DataFrame
-coordinates = geocode_addresses(addresses)
-user_addresses_df['latitude'] = [coord[0] for coord in coordinates]
-user_addresses_df['longitude'] = [coord[1] for coord in coordinates]
-
-# ---- Caching the main user query ----
-@st.cache_data
-def get_users():
-    query = """
-    SELECT DISTINCT u.gender, u.birthdate, ua.estado, ua.cidade, ua.bairro, up.valid_until 
-    FROM users u 
-    LEFT JOIN user_addresses ua ON ua.user_id = u.id 
-    LEFT JOIN user_plans up ON up.user_id = u.id
-    """
-    return conn.query(query)
-
-# Carregar dados dos usuários
-df = get_users()
+df = conn.query("SELECT DISTINCT u.gender, u.birthdate, ua.estado, ua.cidade, ua.bairro, up.valid_until "
+                "FROM users u "
+                "LEFT JOIN user_addresses ua ON ua.user_id = u.id "
+                "LEFT JOIN user_plans up ON up.user_id = u.id")
 
 # Converter 'valid_until' para formato de data
 df['valid_until'] = pd.to_datetime(df['valid_until'], errors='coerce')
@@ -178,24 +121,3 @@ with col1:
 # Exibir o gráfico de faixa etária na segunda coluna
 with col2:
     st.plotly_chart(fig_age)
-
-# ----- Mapa de Localizações -----
-# Criar um mapa folium
-map_center = [-14.2350, -51.9253]  # Centro do Brasil
-m = folium.Map(location=map_center, zoom_start=4)
-
-# Adicionar um cluster de marcadores
-marker_cluster = MarkerCluster().add_to(m)
-
-# Adicionar marcadores ao mapa
-for idx, row in user_addresses_df.iterrows():
-    if row['latitude'] and row['longitude']:  # Verificar se as coordenadas são válidas
-        folium.Marker(
-            location=[row['latitude'], row['longitude']],
-            popup=f"{row['bairro']}, {row['cidade']}, {row['estado']}<br>Total: {row['total']}",
-            icon=folium.Icon(color='blue', icon='info-sign')
-        ).add_to(marker_cluster)
-
-# Exibir o mapa no Streamlit
-st.write("### Mapa de Localizações de Usuários")
-folium_static(m)
