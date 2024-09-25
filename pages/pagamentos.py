@@ -1,6 +1,7 @@
 import streamlit as st
 
 page_name = "Pagamentos"
+
 # Configuração da página
 st.set_page_config(page_title=page_name, page_icon="💳", layout="wide")
 
