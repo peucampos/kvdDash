@@ -16,7 +16,7 @@ st.title("Usuários")
 
 # Conectando ao banco de dados
 conn = st.connection("my_database")
-df = conn.query("SELECT DISTINCT u.id, u.name, u.email, u.phone, u.gender, u.birthdate, ua.estado, " 
+df = conn.query("SELECT DISTINCT u.id, u.name, u.email, u.phone, u.gender, u.birthdate, ua.estado, "
                 "ua.cidade, ua.bairro, up.valid_until, uf.permission, uhp.weight, uhp.height "
                 "FROM users u "
                 "LEFT JOIN user_addresses ua ON ua.user_id = u.id "
@@ -28,10 +28,16 @@ df = conn.query("SELECT DISTINCT u.id, u.name, u.email, u.phone, u.gender, u.bir
 df['valid_until'] = pd.to_datetime(df['valid_until'], errors='coerce')
 today = pd.to_datetime(datetime.now().date())
 
+# Filtrar DataFrame para incluir apenas linhas onde 'valid_until' não é nulo
+df_filtered = df[df['valid_until'].notnull()]
+
+# Adicionar um filtro para mostrar todos os usuários, apenas elegíveis ou apenas inelegíveis na sidebar
+st.sidebar.radio("Filtrar por Elegibilidade", ['Todos', 'Elegíveis', 'Inelegíveis'], key='filter')
+
 # Calcular as métricas
-total_users = df.shape[0]
-elegiveis = df[df['valid_until'] >= today]
-inelegiveis = df[df['valid_until'] < today]
+total_users = df_filtered.shape[0]
+elegiveis = df_filtered[df_filtered['valid_until'] >= today]
+inelegiveis = df_filtered[df_filtered['valid_until'] < today]
 
 # Inicializar o estado da sessão para o filtro
 if 'filter' not in st.session_state:
@@ -42,18 +48,12 @@ col1, col2, col3 = st.columns(3)
 
 # Exibir Total de Usuários como métrica
 col1.metric("Total de Usuários", total_users)
-if col1.button("Filtrar Total de Usuários"):
-    st.session_state.filter = 'Todos'
 
 # Exibir Total de Elegíveis como métrica
 col2.metric("Total de Elegíveis", elegiveis.shape[0])
-if col2.button("Filtrar Total de Elegíveis"):
-    st.session_state.filter = 'Elegíveis'
 
 # Exibir Total de Inelegíveis como métrica
 col3.metric("Total de Inelegíveis", inelegiveis.shape[0])
-if col3.button("Filtrar Total de Inelegíveis"):
-    st.session_state.filter = 'Inelegíveis'
 
 # Filtrar DataFrame com base na seleção do botão
 if st.session_state.filter == 'Elegíveis':
@@ -63,9 +63,6 @@ elif st.session_state.filter == 'Inelegíveis':
 else:
     filtered_df = df  # Todos os usuários
 
-# Exibir a tabela de dados se o checkbox estiver marcado
-if st.checkbox('Mostrar dados'):
-    st.dataframe(filtered_df)
 
 # ----- Gráfico de Gênero -----
 filtered_df['gender'] = filtered_df['gender'].fillna('Não Definido').replace({'M': 'Homens', 'F': 'Mulheres'})
@@ -145,3 +142,7 @@ with col2:
 st.plotly_chart(fig_obesity)
 st.plotly_chart(fig_permission)
 st.plotly_chart(fig_bairro)
+
+# Exibir a tabela de dados se o checkbox estiver marcado
+if st.checkbox('Mostrar dados'):
+    st.dataframe(filtered_df)
