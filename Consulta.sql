@@ -17,8 +17,8 @@ LEFT JOIN user_payment_statuses ups ON ups.id = up.user_payment_status_id
 
 
 #agendamentos
-SELECT ues.scheduled data_agendamento, u.id user_id, u.name user_name, p.name provider, pu.name provider_unit, pu.bairro,
-ues.categoria, uess.status
+SELECT ues.scheduled data_agendamento, u.id user_id, u.name user_name, u.gender, p.name provider, pu.name provider_unit, pu.bairro,
+ues.categoria, uess.status, ues.realizador_nome profissional, ues.procedimento_especialidade_nome
 FROM user_exam_schedules ues
 JOIN providers p ON p.id = ues.provider_id
 JOIN provider_units pu ON pu.id = ues.provider_unit_id
@@ -27,13 +27,24 @@ JOIN user_exam_schedule_statuses uess ON uess.id = ues.status_id
 ORDER BY 1 DESC
 
 
-#outros
-Consulta Não Renovaram
+#afiliados
+SELECT ai.user_id id_afiliado, u.name afiliado, ai.commission, ai.payed_at, ai.type, ai.price, ai.discount
+FROM affiliate_invitations ai
+JOIN users u ON u.id = ai.user_id
+WHERE ai.payed_at IS NOT NULL 
+AND ai.deleted_at IS NULL
+AND ai.price IS NOT NULL
+AND ai.type IS NOT NULL
+
+
+
+
+#Consulta Não Renovaram
 SELECT u.cpf, u.name, u.phone, u.email, up.valid_until FROM user_plans up
 JOIN users u ON u.id = up.user_id
 WHERE up.valid_until < CURDATE()
 AND YEAR(up.valid_until) = 2024
-AND MONTH(up.valid_until) IN (1,2,3)
+AND MONTH(up.valid_until) IN (7,8)
 AND u.deleted_at IS NULL
 AND cpf IS NOT NULL
 AND email IS NOT null
