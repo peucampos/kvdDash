@@ -15,10 +15,26 @@ FROM user_payments up
 LEFT JOIN users u ON u.id = up.user_id
 LEFT JOIN user_payment_statuses ups ON ups.id = up.user_payment_status_id
 
-SELECT * FROM user_payment_statuses
-#agendamentos
-SELECT * FROM user_exam_schedules
 
+#agendamentos
+SELECT ues.scheduled data_agendamento, u.id user_id, u.name user_name, p.name provider, pu.name provider_unit, pu.bairro,
+ues.categoria, uess.status
+FROM user_exam_schedules ues
+JOIN providers p ON p.id = ues.provider_id
+JOIN provider_units pu ON pu.id = ues.provider_unit_id
+JOIN users u ON u.id = ues.user_id
+JOIN user_exam_schedule_statuses uess ON uess.id = ues.status_id
+ORDER BY 1 DESC
 
 
 #outros
+Consulta Não Renovaram
+SELECT u.cpf, u.name, u.phone, u.email, up.valid_until FROM user_plans up
+JOIN users u ON u.id = up.user_id
+WHERE up.valid_until < CURDATE()
+AND YEAR(up.valid_until) = 2024
+AND MONTH(up.valid_until) IN (1,2,3)
+AND u.deleted_at IS NULL
+AND cpf IS NOT NULL
+AND email IS NOT null
+ORDER BY up.valid_until

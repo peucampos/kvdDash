@@ -20,7 +20,7 @@ st.title(page_name)
 conn = st.connection("my_database")
 df = conn.query("""
 SELECT up.created_at, up.updated_at, u.id as user_id, u.name as user, ups.slug as STATUS, up.payable_type, 
-up.pay_type, up.installments, up.price, up.split_value, up.sell_affiliate, up.sell_app, up.sell_landpage, up.sell_klingo
+up.pay_type, up.installments, up.price, up.split_value split, up.sell_affiliate, up.sell_app, up.sell_landpage, up.sell_klingo
 FROM user_payments up
 LEFT JOIN users u ON u.id = up.user_id
 LEFT JOIN user_payment_statuses ups ON ups.id = up.user_payment_status_id
@@ -38,12 +38,13 @@ status_map = {
 df['status_category'] = df['STATUS'].map(status_map).fillna('Incompleto')
 
 # Sidebar checkboxes for filtering payment types
-st.sidebar.header("Payment Type Filters")
+st.sidebar.header("Tipo de Pagamento")
 show_passaporte = st.sidebar.checkbox("Passaporte", value=True)
 show_agendamentos = st.sidebar.checkbox("Agendamentos", value=True)
+show_split = st.sidebar.checkbox("Split", value=True)
 
 # Sidebar checkboxes for filtering payment statuses
-st.sidebar.header("Payment Status Filters")
+st.sidebar.header("Status")
 show_paid = st.sidebar.checkbox("Pago", value=True)
 show_canceled = st.sidebar.checkbox("Cancelado/Estornado", value=False)
 show_incomplete = st.sidebar.checkbox("Incompleto", value=False)
@@ -63,6 +64,8 @@ if show_passaporte:
     selected_payment_types.append('plans')
 if show_agendamentos:
     selected_payment_types.append('appointments')
+if show_split:
+    selected_payment_types.append('split')
 
 # Filter the dataframe based on the selected checkboxes
 filtered_df = df[
@@ -70,27 +73,33 @@ filtered_df = df[
     df['payable_type'].isin(selected_payment_types)
 ]
 
+# Adjust price based on split selection
+if not show_split:
+    filtered_df['price'] = filtered_df['price'] - filtered_df['split']
+
 # Calculating metrics based on the filter
 paid_sum = filtered_df[filtered_df['status_category'] == 'Pago']['price'].sum()
 canceled_sum = filtered_df[filtered_df['status_category'] == 'Cancelado']['price'].sum()
 incomplete_sum = filtered_df[filtered_df['status_category'] == 'Incompleto']['price'].sum()
+split_sum = filtered_df['split'].sum() if show_split else 0
 
 # Displaying metrics side by side
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Paid", f"R$ {locale.format_string('%.2f', paid_sum, grouping=True)}")
-col2.metric("Total Canceled/Refunded", f"R$ {locale.format_string('%.2f', canceled_sum, grouping=True)}")
-col3.metric("Total Incomplete", f"R$ {locale.format_string('%.2f', incomplete_sum, grouping=True)}")
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Total Pago", f"R$ {locale.format_string('%.2f', paid_sum, grouping=True)}")
+col2.metric("Total Cancelado/Estornado", f"R$ {locale.format_string('%.2f', canceled_sum, grouping=True)}")
+col3.metric("Total Incompleto", f"R$ {locale.format_string('%.2f', incomplete_sum, grouping=True)}")
+col4.metric("Total Split", f"R$ {locale.format_string('%.2f', split_sum, grouping=True)}")
 
 # Sidebar multiselect for filtering by year
-st.sidebar.header("Year Filter")
+st.sidebar.header("Filtro por Ano")
 years = filtered_df['created_at'].dt.year.unique()
-selected_years = st.sidebar.multiselect("Select Year(s)", options=years, default=years)
+selected_years = st.sidebar.multiselect("Selecione os anos", options=years, default=years)
 
 # Filter the dataframe based on the selected years
 filtered_df = filtered_df[filtered_df['created_at'].dt.year.isin(selected_years)]
 
 # Show a line chart of the total amount by month considering all filters
-st.header("Total by Month")
+st.header("Total por Mês")
 
 # Convert 'created_at' to datetime and create 'year_month' column
 filtered_df['created_at'] = pd.to_datetime(filtered_df['created_at'])
@@ -115,5 +124,5 @@ with col2:
     st.write(formatted_monthly_total)
 
 # Display the data table if checkbox is checked
-if st.checkbox("Show data"):
+if st.checkbox("Mostrar Dados"):
     st.dataframe(filtered_df)
