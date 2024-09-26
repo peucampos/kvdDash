@@ -5,7 +5,7 @@ from datetime import datetime
 
 st.set_page_config(
     page_title="Usuários",  # Título que aparecerá na aba do navegador
-    page_icon="🏷️",  # Ícone que aparecerá na aba do navegador
+    page_icon="👤",  # Ícone que aparecerá na aba do navegador
     layout="wide"  # Layout da página (pode ser "wide" ou "centered")
 )
 
@@ -16,7 +16,8 @@ st.title("Usuários")
 
 # Conectando ao banco de dados
 conn = st.connection("my_database")
-df = conn.query("SELECT DISTINCT u.gender, u.birthdate, ua.estado, ua.cidade, ua.bairro, up.valid_until, uf.permission, uhp.weight, uhp.height "
+df = conn.query("SELECT DISTINCT u.id, u.name, u.email, u.phone, u.gender, u.birthdate, ua.estado, " 
+                "ua.cidade, ua.bairro, up.valid_until, uf.permission, uhp.weight, uhp.height "
                 "FROM users u "
                 "LEFT JOIN user_addresses ua ON ua.user_id = u.id "
                 "LEFT JOIN user_plans up ON up.user_id = u.id "
