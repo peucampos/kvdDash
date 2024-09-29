@@ -28,15 +28,13 @@ ORDER BY 1 DESC
 
 
 #afiliados
-SELECT ai.user_id id_afiliado, u.name afiliado, ai.commission, ai.payed_at, ai.type, ai.price, ai.discount
+SELECT ai.user_id id_afiliado, u.name afiliado, ai.commission, ai.payed_at, ai.type, ai.price, ai.discount, uba.pix_type, uba.pix_key
 FROM affiliate_invitations ai
 JOIN users u ON u.id = ai.user_id
-WHERE ai.payed_at IS NOT NULL 
-AND ai.deleted_at IS NULL
-AND ai.price IS NOT NULL
-AND ai.type IS NOT NULL
-
-
+LEFT JOIN user_bank_accounts uba ON uba.user_id = u.id
+WHERE ai.payed_at IS NOT NULL AND ai.deleted_at IS NULL
+AND ai.price IS NOT NULL AND ai.type IS NOT NULL
+AND canceled_at IS NULL AND ai.chargebacked_at IS null
 
 
 #Consulta Não Renovaram
@@ -47,5 +45,6 @@ AND YEAR(up.valid_until) = 2024
 AND MONTH(up.valid_until) IN (7,8)
 AND u.deleted_at IS NULL
 AND cpf IS NOT NULL
-AND email IS NOT null
+AND email IS NOT NULL
+
 ORDER BY up.valid_until

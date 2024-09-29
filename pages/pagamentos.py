@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import locale
+import plotly.express as px
 
 # Set locale to Brazilian Portuguese
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
@@ -122,6 +123,34 @@ with col1:
 with col2:
     formatted_monthly_total = monthly_total.apply(lambda x: f"{locale.format_string('%.2f', x, grouping=True)}")
     st.write(formatted_monthly_total)
+
+# Create pie charts for payment sources, payment types, and installments
+st.header("Distribuição de Pagamentos")
+
+# Create three columns for the pie charts
+col1, col2, col3 = st.columns(3)
+
+# Payment sources pie chart
+with col1:
+    st.subheader("Fontes de Pagamento")
+    payment_sources = filtered_df[['sell_affiliate', 'sell_app', 'sell_landpage', 'sell_klingo']].sum()
+    payment_sources = payment_sources.fillna('N/A')  # Replace NaN with 'N/A'
+    fig1 = px.pie(values=payment_sources, names=payment_sources.index, title='Fontes de Pagamento')
+    st.plotly_chart(fig1)
+
+# Payment types pie chart
+with col2:
+    st.subheader("Formas de Pagamento")
+    payment_types = filtered_df['pay_type'].fillna('N/A').value_counts()  # Replace NaN with 'N/A'
+    fig2 = px.pie(values=payment_types, names=payment_types.index, title='Formas de Pagamento')
+    st.plotly_chart(fig2)
+
+# Installments pie chart
+with col3:
+    st.subheader("Número de Parcelas")
+    installments = filtered_df['installments'].value_counts()  # Replace NaN with 'N/A'
+    fig3 = px.pie(values=installments, names=installments.index, title='Número de Parcelas')
+    st.plotly_chart(fig3)
 
 # Display the data table if checkbox is checked
 if st.checkbox("Mostrar Dados"):

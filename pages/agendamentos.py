@@ -47,9 +47,9 @@ show_feminino = st.sidebar.checkbox("Feminino", value=True)
 st.sidebar.header("Data de Agendamento")
 df['data_agendamento'] = pd.to_datetime(df['data_agendamento'])
 
-# Default date range: from 12 months ago to today
-default_start_date = datetime.today() - timedelta(days=365)
-default_end_date = datetime.today()
+# Default date range: from 11 months ago to 1 month ahead
+default_start_date = datetime.today() - timedelta(days=11*30)
+default_end_date = datetime.today() + timedelta(days=30)
 
 start_date = st.sidebar.date_input("Data Inicial", value=default_start_date)
 end_date = st.sidebar.date_input("Data Final", value=default_end_date)
