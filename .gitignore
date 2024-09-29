@@ -3,8 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-#toml
+#configs e senhas
 *.toml
+*.yaml
 
 # User-specific files
 *.rsuser

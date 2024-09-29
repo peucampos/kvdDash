@@ -1,11 +1,17 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from home import authenticate_user
 
 page_name = "Afiliados"
 
 # Configuração da página
 st.set_page_config(page_title=page_name, page_icon="🛂", layout="wide")
+
+# Verifica se o usuário está autenticado
+if not authenticate_user():
+    st.error("Você precisa estar logado para acessar esta página.")
+    st.stop()
 
 # Título da barra lateral
 st.sidebar.title(page_name)  # Muda o título da sidebar
@@ -121,7 +127,7 @@ if st.checkbox("Mostrar Dados Agrupados por Afiliados"):
     grouped_df = grouped_df.merge(df[['id_afiliado', 'afiliado', 'pix_type', 'pix_key']].drop_duplicates(), on='id_afiliado')
 
     # Reorder the columns
-    grouped_df = grouped_df[['id_afiliado', 'afiliado', 'price', 'commission', 'type', 'family_sales', 'discount', 'pix_type', 'pix_key']]
+    grouped_df = grouped_df[['id_afiliado', 'afiliado', 'total_price', 'total_commission', 'individual_sales', 'family_sales', 'discount_sales', 'pix_type', 'pix_key']]
     grouped_df.columns = ['id_afiliado', 'afiliado', 'total_price', 'total_commission', 'individual_sales', 'family_sales', 'discount_sales', 'pix_type', 'pix_key']
 
     # Sort by 'total_price' in descending order
@@ -133,4 +139,3 @@ if st.checkbox("Mostrar Dados Agrupados por Afiliados"):
 # Checkbox for showing raw data
 if st.checkbox("Mostrar Dados"):
     st.write(df)
-

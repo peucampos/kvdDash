@@ -2,14 +2,21 @@ import streamlit as st
 import pandas as pd
 import locale
 import plotly.express as px
-
-# Set locale to Brazilian Portuguese
-locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+from home import authenticate_user
 
 page_name = "Pagamentos"
 
 # Page configuration
 st.set_page_config(page_title=page_name, page_icon="🛂", layout="wide")
+
+# Verifica se o usuário está autenticado
+if not authenticate_user():
+    st.error("Você precisa estar logado para acessar esta página.")
+    st.stop()
+
+# Set locale to Brazilian Portuguese
+locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+
 
 # Sidebar title
 st.sidebar.title(page_name)  # Change the sidebar title

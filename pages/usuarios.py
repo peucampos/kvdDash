@@ -2,17 +2,22 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+from home import authenticate_user
 
-st.set_page_config(
-    page_title="Usuários",  # Title that will appear in the browser tab
-    page_icon="👤",  # Icon that will appear in the browser tab
-    layout="wide"  # Page layout (can be "wide" or "centered")
-)
+page_name = "Usuários"
+
+# Page configuration
+st.set_page_config(page_title=page_name, page_icon="👤", layout="wide")
+
+# Verifica se o usuário está autenticado
+if not authenticate_user():
+    st.error("Você precisa estar logado para acessar esta página.")
+    st.stop()
 
 # Sidebar title
-st.sidebar.title("Usuários")  # Change the sidebar title
+st.sidebar.title(page_name)  # Change the sidebar title
 
-st.title("Usuários")
+st.title(page_name)
 
 # Connecting to the database
 conn = st.connection("my_database")

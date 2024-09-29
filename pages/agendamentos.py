@@ -2,11 +2,17 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 from datetime import datetime, timedelta
+from home import authenticate_user
 
 page_name = "Agendamentos"
 
 # Configuração da página
 st.set_page_config(page_title=page_name, page_icon="📅", layout="wide")
+
+# Verifica se o usuário está autenticado
+if not authenticate_user():
+    st.error("Você precisa estar logado para acessar esta página.")
+    st.stop()
 
 # Título da barra lateral
 st.sidebar.title(page_name)  # Muda o título da sidebar
@@ -156,3 +162,4 @@ st.plotly_chart(fig)
 # Display the data table if checkbox is checked
 if st.checkbox("Mostrar Dados"):
     st.dataframe(filtered_df)
+
