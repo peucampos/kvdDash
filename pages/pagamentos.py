@@ -126,9 +126,10 @@ col1, col2 = st.columns([3, 1])  # Allocate more space to the first column
 with col1:
     st.line_chart(monthly_total)
 
-# Display the values in the line chart in the second column with formatted currency
+# Display the values in the line chart in the second column with formatted currency, ordered by date descending
 with col2:
     formatted_monthly_total = monthly_total.apply(lambda x: f"{locale.format_string('%.2f', x, grouping=True)}")
+    formatted_monthly_total = formatted_monthly_total.sort_index(ascending=False)
     st.write(formatted_monthly_total)
 
 # Create pie charts for payment sources, payment types, and installments
