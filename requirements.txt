@@ -2,5 +2,5 @@ streamlit
 streamlit_authenticator
 pandas
 plotly
-locale
 mysqlclient
+sqlalchemy
