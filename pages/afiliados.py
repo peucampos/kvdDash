@@ -22,9 +22,10 @@ st.title(page_name)
 # Connecting to the database and obtaining the data
 conn = st.connection("my_database")
 df = conn.query("""
-SELECT ai.user_id id_afiliado, u.name afiliado, ai.commission, ai.payed_at, ai.type, ai.price, ai.discount, uba.pix_type, uba.pix_key
+SELECT ai.invited_id, ui.name, ai.user_id id_afiliado, u.name afiliado, ai.commission, ai.created_at, ai.payed_at, ai.type, ai.price, ai.discount, uba.pix_type, uba.pix_key
 FROM affiliate_invitations ai
 JOIN users u ON u.id = ai.user_id
+JOIN users ui ON ui.id = ai.invited_id
 LEFT JOIN user_bank_accounts uba ON uba.user_id = u.id
 WHERE ai.payed_at IS NOT NULL AND ai.deleted_at IS NULL
 AND ai.price IS NOT NULL AND ai.type IS NOT NULL
@@ -35,7 +36,10 @@ ORDER BY 1 DESC
 # Sidebar filter for start date and end date
 st.sidebar.header("Filtrar por Data")
 start_date = st.sidebar.date_input("Data Inicial", datetime.now() - pd.Timedelta(days=30))
-end_date = st.sidebar.date_input("Data Final", datetime.now() + pd.Timedelta(days=1))
+end_date = st.sidebar.date_input("Data Final", datetime.now())
+
+# Ensure the end date is always set to 23:59:59
+end_date = pd.to_datetime(end_date) + pd.Timedelta(hours=23, minutes=59, seconds=59)
 
 # Filter the dataframe based on the selected start date and end date
 df = df[(df['payed_at'] >= pd.to_datetime(start_date)) & (df['payed_at'] <= pd.to_datetime(end_date))]
@@ -163,11 +167,21 @@ if st.checkbox("Mostrar Dados"):
 
     st.write(df)
 
-    # Display totalizers for commission, price, and discount
+    # Display totalizers for commission, price, discount, and total sales (quantity)
     total_commission = df['commission'].sum()
     total_price = df['price'].sum()
     discount_sales_count = df[df['discount'] > 0].shape[0]
+    total_sales_count = df.shape[0]
+    family_sales_count = df[df['type'] == 'family'].shape[0]
+    individual_sales_count = df[df['type'] == 'individual'].shape[0]
 
-    st.write(f"**Total Comissão:** R$ {total_commission:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-    st.write(f"**Total Preço:** R$ {total_price:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-    st.write(f"**Vendas com Desconto:** {discount_sales_count}")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"**Total Comissão:** R$ {total_commission:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"**Total Preço:** R$ {total_price:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+        st.write(f"**Vendas com Desconto:** {discount_sales_count}")
+    
+    with col2:
+        st.write(f"**Vendas Tipo Família:** {family_sales_count}")
+        st.write(f"**Vendas Tipo Individual:** {individual_sales_count}")
+        st.write(f"**Total de Vendas:** {total_sales_count}")

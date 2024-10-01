@@ -1,5 +1,6 @@
 import streamlit as st
 import locale
+import pandas as pd
 from datetime import datetime, timedelta
 from home import authenticate_user
 
@@ -27,6 +28,9 @@ one_month_ago = today - timedelta(days=30)
 # Date filters in the sidebar
 start_date = st.sidebar.date_input("Data Inicial", one_month_ago)
 end_date = st.sidebar.date_input("Data Final", today)
+
+# Ensure the end date is always set to 23:59:59
+end_date = pd.to_datetime(end_date) + pd.Timedelta(hours=23, minutes=59, seconds=59)
 
 st.title(page_name)
 

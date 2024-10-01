@@ -100,7 +100,10 @@ col4.metric("Total Split", f"R$ {locale.format_string('%.2f', split_sum, groupin
 # Sidebar date input for filtering by date range
 st.sidebar.header("Filtro por Data")
 start_date = st.sidebar.date_input("Data Inicial", value=pd.Timestamp.today() - pd.DateOffset(months=12))
-end_date = st.sidebar.date_input("Data Final", value=pd.Timestamp.today() + pd.Timedelta(days=1))
+end_date = st.sidebar.date_input("Data Final", value=pd.Timestamp.today())
+
+# Ensure the end date is always set to 23:59:59
+end_date = pd.to_datetime(end_date) + pd.Timedelta(hours=23, minutes=59, seconds=59)
 
 # Filter the dataframe based on the selected date range
 filtered_df = filtered_df[(filtered_df['created_at'] >= pd.to_datetime(start_date)) & 

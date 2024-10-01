@@ -60,6 +60,9 @@ default_end_date = datetime.today() + timedelta(days=30)
 start_date = st.sidebar.date_input("Data Inicial", value=default_start_date)
 end_date = st.sidebar.date_input("Data Final", value=default_end_date)
 
+# Ensure the end date is always set to 23:59:59
+end_date = pd.to_datetime(end_date) + pd.Timedelta(hours=23, minutes=59, seconds=59)
+
 # Format the dates to day/month/year
 start_date = start_date.strftime('%d/%m/%Y')
 end_date = end_date.strftime('%d/%m/%Y')
