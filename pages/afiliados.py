@@ -1,12 +1,13 @@
 import streamlit as st
-import pandas as pd
 import plotly.express as px
 from home import authenticate_user
+from datetime import datetime
+import pandas as pd
 
 page_name = "Afiliados"
 
 # Configuração da página
-st.set_page_config(page_title=page_name, page_icon="🛂", layout="wide")
+st.set_page_config(page_title=page_name, page_icon="🧑‍💼", layout="wide")
 
 # Verifica se o usuário está autenticado
 if not authenticate_user():
@@ -30,15 +31,14 @@ AND ai.price IS NOT NULL AND ai.type IS NOT NULL
 AND canceled_at IS NULL AND ai.chargebacked_at IS null
 ORDER BY 1 DESC
 """)
-# Sidebar filter for year/month
-st.sidebar.header("Filtrar por Ano/Mês")
-years = df['payed_at'].dt.year.unique()
-months = df['payed_at'].dt.month_name().unique()
-selected_years = st.sidebar.multiselect("Anos", years, default=years)
-selected_months = st.sidebar.multiselect("Meses", months, default=months)
 
-# Filter the dataframe based on the selected years and months
-df = df[df['payed_at'].dt.year.isin(selected_years) & df['payed_at'].dt.month_name().isin(selected_months)]
+# Sidebar filter for start date and end date
+st.sidebar.header("Filtrar por Data")
+start_date = st.sidebar.date_input("Data Inicial", datetime.now() - pd.Timedelta(days=30))
+end_date = st.sidebar.date_input("Data Final", datetime.now() + pd.Timedelta(days=1))
+
+# Filter the dataframe based on the selected start date and end date
+df = df[(df['payed_at'] >= pd.to_datetime(start_date)) & (df['payed_at'] <= pd.to_datetime(end_date))]
 
 # Show metrics for total sale and total commission side by side
 total_sale = df['price'].sum()
@@ -105,6 +105,18 @@ fig.update_layout(height=600)
 
 st.plotly_chart(fig)
 
+# Line chart for sales by day
+st.header("Vendas por Dia")
+
+# Group by 'payed_at' and calculate the sum of 'price'
+df['payed_at'] = pd.to_datetime(df['payed_at']).dt.date
+sales_by_day = df.groupby('payed_at')['price'].sum().reset_index()
+
+# Line chart for sales by day using Plotly
+fig_line = px.line(sales_by_day, x='payed_at', y='price', title='Vendas por Dia',
+                   labels={'payed_at': 'Data', 'price': 'Valor'})
+
+st.plotly_chart(fig_line)
 
 # Checkbox for showing raw data grouped by users
 if st.checkbox("Mostrar Dados Agrupados por Afiliados"):
@@ -115,6 +127,9 @@ if st.checkbox("Mostrar Dados Agrupados por Afiliados"):
         'type': lambda x: (x == 'individual').sum(),  # Count of individual sales
         'discount': lambda x: (x > 0).sum()  # Count of sales with discount
     }).reset_index()
+
+    # Rename the columns after aggregation
+    grouped_df.columns = ['id_afiliado', 'total_price', 'total_commission', 'individual_sales', 'discount_sales']
 
     # Calculate the count of 'família' type sales
     family_sales_count = df[df['type'] == 'family'].groupby('id_afiliado')['type'].count().reset_index()
@@ -128,7 +143,6 @@ if st.checkbox("Mostrar Dados Agrupados por Afiliados"):
 
     # Reorder the columns
     grouped_df = grouped_df[['id_afiliado', 'afiliado', 'total_price', 'total_commission', 'individual_sales', 'family_sales', 'discount_sales', 'pix_type', 'pix_key']]
-    grouped_df.columns = ['id_afiliado', 'afiliado', 'total_price', 'total_commission', 'individual_sales', 'family_sales', 'discount_sales', 'pix_type', 'pix_key']
 
     # Sort by 'total_price' in descending order
     grouped_df = grouped_df.sort_values(by='total_price', ascending=False)
@@ -138,4 +152,22 @@ if st.checkbox("Mostrar Dados Agrupados por Afiliados"):
 
 # Checkbox for showing raw data
 if st.checkbox("Mostrar Dados"):
+    
+    # Selectbox for filtering by affiliate name
+    affiliate_names = sorted(df['afiliado'].unique())
+    selected_affiliate = st.selectbox("Selecione um Afiliado", options=["Todos"] + list(affiliate_names))
+
+    # Filter the dataframe based on the selected affiliate
+    if selected_affiliate != "Todos":        
+        df = df[df['afiliado'] == selected_affiliate]
+
     st.write(df)
+
+    # Display totalizers for commission, price, and discount
+    total_commission = df['commission'].sum()
+    total_price = df['price'].sum()
+    discount_sales_count = df[df['discount'] > 0].shape[0]
+
+    st.write(f"**Total Comissão:** R$ {total_commission:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    st.write(f"**Total Preço:** R$ {total_price:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    st.write(f"**Vendas com Desconto:** {discount_sales_count}")

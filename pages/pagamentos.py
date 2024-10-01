@@ -7,7 +7,7 @@ from home import authenticate_user
 page_name = "Pagamentos"
 
 # Page configuration
-st.set_page_config(page_title=page_name, page_icon="🛂", layout="wide")
+st.set_page_config(page_title=page_name, page_icon="💰", layout="wide")
 
 # Verifica se o usuário está autenticado
 if not authenticate_user():
@@ -16,7 +16,6 @@ if not authenticate_user():
 
 # Set locale to Brazilian Portuguese
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
-
 
 # Sidebar title
 st.sidebar.title(page_name)  # Change the sidebar title
@@ -98,13 +97,14 @@ col2.metric("Total Cancelado/Estornado", f"R$ {locale.format_string('%.2f', canc
 col3.metric("Total Incompleto", f"R$ {locale.format_string('%.2f', incomplete_sum, grouping=True)}")
 col4.metric("Total Split", f"R$ {locale.format_string('%.2f', split_sum, grouping=True)}")
 
-# Sidebar multiselect for filtering by year
-st.sidebar.header("Filtro por Ano")
-years = filtered_df['created_at'].dt.year.unique()
-selected_years = st.sidebar.multiselect("Selecione os anos", options=years, default=years)
+# Sidebar date input for filtering by date range
+st.sidebar.header("Filtro por Data")
+start_date = st.sidebar.date_input("Data Inicial", value=pd.Timestamp.today() - pd.DateOffset(months=12))
+end_date = st.sidebar.date_input("Data Final", value=pd.Timestamp.today() + pd.Timedelta(days=1))
 
-# Filter the dataframe based on the selected years
-filtered_df = filtered_df[filtered_df['created_at'].dt.year.isin(selected_years)]
+# Filter the dataframe based on the selected date range
+filtered_df = filtered_df[(filtered_df['created_at'] >= pd.to_datetime(start_date)) & 
+                          (filtered_df['created_at'] <= pd.to_datetime(end_date))]
 
 # Show a line chart of the total amount by month considering all filters
 st.header("Total por Mês")
@@ -159,6 +159,32 @@ with col3:
     installments = filtered_df['installments'].value_counts()  # Replace NaN with 'N/A'
     fig3 = px.pie(values=installments, names=installments.index, title='Número de Parcelas')
     st.plotly_chart(fig3)
+
+if st.checkbox("Vendas por Hora"):
+    st.header("Vendas por Hora")
+    # Add slider for selecting hour range
+    start_hour, end_hour = st.slider(
+        "Selecione o intervalo de horas",
+        min_value=0,
+        max_value=23,
+        value=(6, 18),
+        format="%02d:00"
+    )
+    # Filter the dataframe based on the selected hour range
+    filtered_df['hour'] = filtered_df['created_at'].dt.hour
+    filtered_df = filtered_df[(filtered_df['hour'] >= start_hour) & (filtered_df['hour'] <= end_hour)]
+
+    # Filter the dataframe based on the selected date range
+    filtered_df = filtered_df[(filtered_df['created_at'] >= pd.to_datetime(start_date)) & 
+                              (filtered_df['created_at'] <= pd.to_datetime(end_date))]
+
+    # Group by date and sum the prices
+    daily_total = filtered_df.groupby(filtered_df['created_at'].dt.date)['price'].sum()
+
+    # Create a line chart for sales by day within the selected hour range
+    fig = px.line(daily_total, x=daily_total.index, y='price', labels={'x': 'Data', 'price': 'Total de Vendas'}, title='Vendas por Dia dentro do Intervalo de Horas')
+    st.plotly_chart(fig)
+
 
 # Display the data table if checkbox is checked
 if st.checkbox("Mostrar Dados"):
