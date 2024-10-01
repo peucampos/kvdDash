@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Streamlit Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/home.py",
+            "console": "integratedTerminal",
+            "args": [
+                "run",
+                "--browser.serverAddress=localhost",
+                "--server.port=8501"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+    ]
+}
