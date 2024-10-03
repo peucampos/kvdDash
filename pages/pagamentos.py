@@ -187,7 +187,7 @@ if st.checkbox("Vendas por Hora"):
     # Create a line chart for sales by day within the selected hour range
     fig = px.line(daily_total, x=daily_total.index, y='price', labels={'x': 'Data', 'price': 'Total de Vendas'}, title='Vendas por Dia dentro do Intervalo de Horas')
     st.plotly_chart(fig)
-    
+
 if st.checkbox("Vendas por Dia do Mês"):
     st.header("Vendas por Dia do Mês")
     # Add slider for selecting day range
@@ -209,7 +209,7 @@ if st.checkbox("Vendas por Dia do Mês"):
     monthly_total.index = monthly_total.index.astype(str)
 
     # Create a line chart for sales by month within the selected day range
-    fig = px.line(monthly_total, x=monthly_total.index, y='price', labels={'x': 'Mês', 'price': 'Total de Vendas'}, title='Vendas por Mês dentro do Intervalo de Dias')
+    fig = px.bar(monthly_total, x=monthly_total.index, y='price', labels={'x': 'Mês', 'price': 'Total de Vendas'}, title='Vendas por Mês dentro do Intervalo de Dias')
     st.plotly_chart(fig)
 
 
