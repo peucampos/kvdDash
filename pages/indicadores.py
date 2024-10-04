@@ -99,38 +99,38 @@ col1, col2, col3 = st.columns(3)
 # Pie chart for allergies
 allergies = df['alergia'].value_counts().reset_index()
 allergies.columns = ['alergia', 'count']
-fig = px.pie(allergies, values='count', names='alergia', title='Alergias')
+fig = px.pie(allergies, values='count', names='alergia', title=f'Alergias ({allergies['count'].sum()})')
 col1.plotly_chart(fig)
 
 # Pie chart for chronic diseases
 chronic_diseases = df['cronicas'].value_counts().reset_index()
 chronic_diseases.columns = ['cronicas', 'count']
-fig = px.pie(chronic_diseases, values='count', names='cronicas', title='Doenças Crônicas')
+fig = px.pie(chronic_diseases, values='count', names='cronicas', title=f'Doenças Crônicas ({chronic_diseases['count'].sum()})')
 col2.plotly_chart(fig)
 
 # Pie chart for special conditions
 special_conditions = df['condicoes'].value_counts().reset_index()
 special_conditions.columns = ['condicoes', 'count']
-fig = px.pie(special_conditions, values='count', names='condicoes', title='Condições Especiais')
+fig = px.pie(special_conditions, values='count', names='condicoes', title=f'Condições Especiais ({special_conditions['count'].sum()})')
 col3.plotly_chart(fig)
 
 # Remove duplicate users based on user.id
-df = df.drop_duplicates(subset=['id'])
+df_unique = df.drop_duplicates(subset=['id'])
 
 # Pie charts for age range and gender distribution side by side
 st.header("Faixa Etária e Distribuição de Gênero")
 col1, col2 = st.columns(2)
 
 # Pie chart for age range
-age_range = df['age_range'].value_counts().reset_index()
+age_range = df_unique['age_range'].value_counts().reset_index()
 age_range.columns = ['age_range', 'count']
-fig = px.pie(age_range, values='count', names='age_range', title='Faixa Etária')
+fig = px.pie(age_range, values='count', names='age_range', title=f'Faixa Etária ({age_range['count'].sum()})')
 col1.plotly_chart(fig)
 
 # Pie chart for gender distribution
-gender_distribution = df['gender'].value_counts().reset_index()
+gender_distribution = df_unique['gender'].value_counts().reset_index()
 gender_distribution.columns = ['gender', 'count']
-fig = px.pie(gender_distribution, values='count', names='gender', title='Distribuição de Gênero')
+fig = px.pie(gender_distribution, values='count', names='gender', title=f'Distribuição de Gênero ({gender_distribution["count"].sum()})')
 col2.plotly_chart(fig)
 
 # Pie charts for blood type and IMC range side by side
@@ -138,17 +138,17 @@ st.header("Tipo Sanguíneo e Faixa de IMC")
 col1, col2 = st.columns(2)
 
 # Pie chart for blood type
-blood_type = df['sangue'].value_counts().reset_index()
+blood_type = df_unique['sangue'].value_counts().reset_index()
 blood_type.columns = ['sangue', 'count']
-fig = px.pie(blood_type, values='count', names='sangue', title='Tipo Sanguíneo')
+fig = px.pie(blood_type, values='count', names='sangue', title=f'Tipo Sanguíneo ({blood_type["count"].sum()})')
 col1.plotly_chart(fig)
 
 # Pie chart for IMC range
-imc_distribution = df['imc_range'].value_counts().reset_index()
+imc_distribution = df_unique['imc_range'].value_counts().reset_index()
 imc_distribution.columns = ['imc_range', 'count']
-fig = px.pie(imc_distribution, values='count', names='imc_range', title='Faixa de IMC')
+fig = px.pie(imc_distribution, values='count', names='imc_range', title=f'Faixa de IMC ({imc_distribution["count"].sum()})')
 col2.plotly_chart(fig)
 
 # Show the table with the user data
-st.header("Dados dos Usuários")
+st.header(f'Dados dos Usuários ({len(df)})')
 st.write(df)
