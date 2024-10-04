@@ -67,6 +67,11 @@ end_date = pd.to_datetime(end_date) + pd.Timedelta(hours=23, minutes=59, seconds
 start_date = start_date.strftime('%d/%m/%Y')
 end_date = end_date.strftime('%d/%m/%Y')
 
+# Sidebar multiselect for filtering providers
+st.sidebar.header("Credenciado")
+providers = df['provider'].unique()
+selected_providers = st.sidebar.multiselect("Selecione os Credenciados", options=providers, default=providers)
+
 # Map gender values
 gender_mapping = {
     'M': 'Masculino',
@@ -81,7 +86,7 @@ if show_agendado:
 if show_cancelado:
     selected_status.append('Cancelado')
 
-# Apply filters based on the checkboxes, category, gender, and date range
+# Apply filters based on the checkboxes, category, gender, date range, and providers
 filtered_df = df[
     (((df['categoria'] == 'L') & show_laboratorio) |
     ((df['categoria'] == 'C') & show_consulta) |
@@ -90,7 +95,8 @@ filtered_df = df[
     (df['data_agendamento'] >= pd.to_datetime(start_date, format='%d/%m/%Y')) &
     (df['data_agendamento'] <= pd.to_datetime(end_date, format='%d/%m/%Y')) &
     (((df['gender'] == 'Masculino') & show_masculino) |
-    ((df['gender'] == 'Feminino') & show_feminino))
+    ((df['gender'] == 'Feminino') & show_feminino)) &
+    (df['provider'].isin(selected_providers))
 ]
 
 # Mapping category codes to names
@@ -165,4 +171,3 @@ st.plotly_chart(fig)
 # Display the data table if checkbox is checked
 if st.checkbox("Mostrar Dados"):
     st.dataframe(filtered_df)
-
