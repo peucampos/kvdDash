@@ -14,7 +14,8 @@ credentials = {
     "usernames": {
         USERNAME: {
             "name": "admin",
-            "password": PASSWORD
+            "password": PASSWORD,
+            "email": "teste@teste.com"
         }
     }
 }
